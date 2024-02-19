@@ -1,4 +1,8 @@
+#include <cstddef>
 #include <iostream>
+#include <arpa/inet.h>
+#include <iterator>
+#include <netinet/in.h>
 #include <ostream>
 #include <raylib.h>
 #include <unistd.h>
@@ -58,7 +62,35 @@ class striker{
 };
 
 int main (int argc, char *argv[]) {
-    int sfd = socket(AF_INET, SOCK_STREAM, 0);
+//    int sfd = socket(AF_INET, SOCK_STREAM, 0);
+//    sockaddr_in dat;
+//    dat.sin_family = AF_INET;
+//    dat.sin_port = htons(PORT);
+//    inet_pton(AF_INET, ("127.0.0.1"), &dat.sin_addr.s_addr);
+//    if (bind(sfd, (sockaddr*)&dat, sizeof(dat)) < 0){
+//        std::cerr << "[ERROR] Socket Bind Failed" << std::endl;
+//        close(sfd);
+//        return 0;
+//    }
+//    else{
+//        std::cout << "[INFO] Socket bound" << std::endl;
+//    }
+//    if (listen(sfd, 2) < 0){
+//        std::cerr << "[ERROR] Can't listen on socket" << std::endl;
+//        close(sfd);
+//        return 0;
+//    }
+//    else{
+//        std::cout << "[INFO] Socket listening" << std::endl;
+//    }
+//    int con = accept(sfd, NULL, NULL);
+//    if (con < 0){
+//        std::cerr << "[ERROR] Socket failed to accept connection" << std::endl;
+//        return -1;
+//    }
+//    else{
+//        std::cout << "[INFO] Socket listening" << std::endl;
+//    }
     std::cout << "[INFO] Starting Game" << std::endl;
     Puck ball;
     striker p1;
@@ -106,6 +138,5 @@ int main (int argc, char *argv[]) {
         EndDrawing();
     }
     CloseWindow();
-    close(sfd);
     return 0;
 }
