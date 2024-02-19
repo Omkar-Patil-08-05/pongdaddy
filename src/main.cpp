@@ -1,4 +1,6 @@
 #include <cstddef>
+#include <fstream>
+#include <ios>
 #include <iostream>
 #include <arpa/inet.h>
 #include <iterator>
@@ -13,7 +15,7 @@
 #define HEIGHT 700
 #define PADDLEH 100
 #define PADDLEW 10
-
+#define PIPE "/tmp/pongdaddy"
 class Puck{
     public:
         Color color;
@@ -42,6 +44,13 @@ class striker{
         float width,height;
         float x, y;
         int mov;
+        void broadcast(float y){
+            std::ofstream pipe(PIPE,std::ios::out | std::ios::binary);
+            if (pipe.is_open()) {
+                pipe.write((const char*)(&y), sizeof(y));
+                pipe.close();
+            }
+        }
         void draw(){
             DrawRectangle(x, y, width, height, color);
         }
@@ -54,9 +63,11 @@ class striker{
             }
             if (IsKeyDown(KEY_K)) {
                 y-=mov;
+                broadcast(y);
             }
             if (IsKeyDown(KEY_J)) {
                 y+=mov;
+                broadcast(y);
             }
         }
 };
