@@ -63,11 +63,9 @@ class striker{
             }
             if (IsKeyDown(KEY_K)) {
                 y-=mov;
-                broadcast(y);
             }
             if (IsKeyDown(KEY_J)) {
                 y+=mov;
-                broadcast(y);
             }
         }
 };

@@ -14,8 +14,8 @@
 #include <arpa/inet.h>
 #include <vector>
 
-#define WPORT 8080
-#define RPORT 8123
+#define WPORT 8089
+#define RPORT 8008
 #define PIPE "/tmp/pongdaddy"
 
 float buf[2];
@@ -43,7 +43,9 @@ int main (int argc, char *argv[]) {
     readsoc.sin_port = htons(RPORT);
     inet_pton(AF_INET, ("192.168.1.7"),&writesoc.sin_addr.s_addr);
     inet_pton(AF_INET, ("192.168.1.7"),&readsoc.sin_addr.s_addr);
-    if (connect(writer, (sockaddr*)&writesoc, sizeof(writesoc)) < 0 && connect(reader, (sockaddr*)&readsoc, sizeof(readsoc)) < 0){
+    int con =  connect(reader, (sockaddr*)&readsoc, sizeof(readsoc));
+    std::cout << con<<std::endl;
+    if (connect(writer, (sockaddr*)&writesoc, sizeof(writesoc)) < 0 ){
         std::cerr << "[ERROR] Failed to connect to server" << std::endl;
         return 0;
     }
@@ -65,8 +67,8 @@ int main (int argc, char *argv[]) {
     float readbuf[2] = {-1,-1};
     while (true) {
         int msg = recv(reader, readbuf, sizeof(readbuf), 0);
-        std::cout << msg << std::endl;
         if (msg==0) break;
+        std::cout << "[CLIENT P2]" <<  readbuf[1] << std::endl;
     }
     // while (1) {
     //   read(pfd, buf, sizeof(buf));
@@ -77,6 +79,7 @@ int main (int argc, char *argv[]) {
     //        usleep(160000);
     // }
     close(writer);
+    close(reader);
     close(pfd);
     return 0;
 }
