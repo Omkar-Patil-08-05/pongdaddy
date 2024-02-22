@@ -2,12 +2,17 @@ CXX=g++
 CXXFLAGS=-Wall -Wextra -std=c++17
 
 RAYLIB=~/raylib
-
-LIB=-L$(RAYLIB)/src -lraylib
+SRCS=~/dev/pong/src/main.cpp ~/dev/pong/src/client.cpp
+OBJS = $(SRCS:.cpp=.o)
+LIB=-L$(RAYLIB)/src -lraylib 
 INCLUDE=-I$(RAYLIB)/src
 
 ORIGIN=src/main.cpp
 TARGET=outfiles/pong
 
-$(TARGET): $(ORIGIN)
-	$(CXX) $(CFLAGS) $(INCLUDE) -o $@ $^  $(LIB)
+$(TARGET): $(OBJS)
+	$(CXX) $(LDFLAGS) $(INCLUDE) $^ -o $@ $(LIB)
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+

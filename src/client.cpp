@@ -14,22 +14,25 @@
 #include <openssl/err.h>
 #include <arpa/inet.h>
 #include <vector>
-
+#include "clients.h"
 #define WPORT 8089
 #define RPORT 8008
 #define PIPE "/tmp/pongdaddy"
 int wsoc,rsoc;
-float readbuf[2] = {-1,-1};
 void send_to_server(int cfd,float buf[2]){
+    std::cout << "[SENDING STARTING]" << std::endl;
     while (true) {
         int msg = send(cfd, buf, sizeof(float)*2, 0);
+        if (msg<0) {
+            perror("send");
+        }
+        std::cout << buf[1] << std::endl;
     }
 }
 void receive_from_server(int reader,float readbuf[2]){
     while (true) {
         int msg = recv(reader, readbuf, sizeof(float)*2, 0);
         if (msg==0) break;
-        std::cout << "[CLIENT P2]" <<  readbuf[1] << std::endl;
     }
 
 }
@@ -38,19 +41,14 @@ void configure_sockets(sockaddr_in *writesoc, sockaddr_in *readsoc){
     (*writesoc).sin_port = htons(WPORT);
     (*readsoc) = *writesoc;
     (*readsoc).sin_port = htons(RPORT);
-    inet_pton(AF_INET, ("192.168.1.7"),&(*writesoc).sin_addr.s_addr);
-    inet_pton(AF_INET, ("192.168.1.7"),&(*readsoc).sin_addr.s_addr);
+    inet_pton(AF_INET, ("192.168.1.96"),&(*writesoc).sin_addr.s_addr);
+    inet_pton(AF_INET, ("192.168.1.96"),&(*readsoc).sin_addr.s_addr);
 }
 
-void close_all(int signum){
-    close(wsoc);
-    close(rsoc);
-}
 
-void create_sockets(int* writer, int* reader){
+CONS create_sockets(int* writer, int* reader){
     wsoc = *writer;
     rsoc = *reader;
-    std::signal(SIGINT,close_all);
     if (*reader<0) {
         std::cout << "[ERROR] read socket creation failed" << std::endl;
     }
@@ -59,12 +57,15 @@ void create_sockets(int* writer, int* reader){
     }
     sockaddr_in writesoc,readsoc;
     configure_sockets(&writesoc, &readsoc);
-    int con =  connect(*reader, (sockaddr*)&readsoc, sizeof(readsoc));
-    if (connect(*writer, (sockaddr*)&writesoc, sizeof(writesoc)) < 0 ){
+    CONS cons;
+    cons.readcon =  connect(*reader, (sockaddr*)&readsoc, sizeof(readsoc));
+    cons.writecon = connect(*writer, (sockaddr*)&writesoc, sizeof(writesoc));
+    if (cons.readcon < 0 && cons.writecon < 0){
         std::cerr << "[ERROR] Failed to connect to server" << std::endl;
     }
     else{
         std::cout << "[INFO] Client connected to server" << std::endl;
     }
+    return cons;
 }
 

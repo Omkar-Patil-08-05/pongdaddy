@@ -17,19 +17,14 @@ float buf1[2] = {0,0};
 float buf2[2] = {0,0};
 std::vector<std::thread> proc;
 std::vector<std::thread> sendlist;
-void send_to_client(int sender){
+void send_to_client(int sender,float buffer[2]){
     while(true){
-        if (buf[0]==0) {
-        //    std::cout << "[P1] " << buf1[1] << std::endl;
-        }
-        else{
-            int msg = send(sender, buf2, sizeof(buf2), 0);
-        }
-
-      //  int msg = send(sender, buf, sizeof(buf), 0);
+        int msg = send(sender, buffer, sizeof(float)*2, 0);
+        std::cout << msg << std::endl;
     }
 }
 void process(int con){
+    std::cout << "[POLLING STARTED]" << std::endl;
     while (true) {
         int msg = recv(con, buf, sizeof(buf), 0);
         if(msg == 0) break;
@@ -45,7 +40,8 @@ void process(int con){
 }
 int main(){
     int reader = socket(AF_INET, SOCK_STREAM, 0);
-    int writer = socket(AF_INET, SOCK_STREAM, 0);
+    int writer1 = socket(AF_INET, SOCK_STREAM, 0);
+    int writer2 = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in readsoc;
     readsoc.sin_family = AF_INET;
     readsoc.sin_port = htons(RPORT);
@@ -67,12 +63,12 @@ int main(){
     else{
         std::cout << "[INFO] Socket listening" << std::endl;
     }
-    sockaddr_in writesoc;
-    writesoc.sin_family = AF_INET;
-    writesoc.sin_port = htons(WPORT1);
-    writesoc.sin_addr.s_addr = INADDR_ANY;
+    sockaddr_in writesoc1;
+    writesoc1.sin_family = AF_INET;
+    writesoc1.sin_port = htons(WPORT1);
+    writesoc1.sin_addr.s_addr = INADDR_ANY;
     //    inet_pton(AF_INET, ("127.0.0.1"), &dat.sin_addr.s_addr);
-    if (bind(writer, (sockaddr*)&writesoc, sizeof(writesoc)) < 0 ){
+    if (bind(writer1, (sockaddr*)&writesoc1, sizeof(writesoc1)) < 0 ){
         std::cerr << "[ERROR] Socket Bind Failed" << std::endl;
         close(reader);
         return 0;
@@ -80,7 +76,28 @@ int main(){
     else{
         std::cout << "[INFO] Socket bound" << std::endl;
     }
-    if (listen(writer, 2) < 0){
+    if (listen(writer1, 2) < 0){
+        std::cerr << "[ERROR] Can't listen on socket" << std::endl;
+        close(reader);
+        return 0;
+    }
+    else{
+        std::cout << "[INFO] Socket listening" << std::endl;
+    }
+    sockaddr_in writesoc2;
+    writesoc2.sin_family = AF_INET;
+    writesoc2.sin_port = htons(WPORT2);
+    writesoc2.sin_addr.s_addr = INADDR_ANY;
+    //    inet_pton(AF_INET, ("127.0.0.1"), &dat.sin_addr.s_addr);
+    if (bind(writer2, (sockaddr*)&writesoc2, sizeof(writesoc2)) < 0 ){
+        std::cerr << "[ERROR] Socket Bind Failed" << std::endl;
+        close(reader);
+        return 0;
+    }
+    else{
+        std::cout << "[INFO] Socket bound" << std::endl;
+    }
+    if (listen(writer2, 2) < 0){
         std::cerr << "[ERROR] Can't listen on socket" << std::endl;
         close(reader);
         return 0;
@@ -90,9 +107,8 @@ int main(){
     }
     while (true) {
         int con = accept(reader, NULL, NULL);
-        std::cout<<con<<std::endl;
-        int writecon = accept(writer, NULL, NULL);
-        std::cout << writecon << std::endl;
+        int writecon1 = accept(writer1, NULL, NULL);
+        int writecon2 = accept(writer2, NULL, NULL);
         // 2 threads for each client 
         if (con < 0){
             std::cerr << "[ERROR] Socket failed to accept connection" << std::endl;
@@ -101,12 +117,14 @@ int main(){
         else{
             std::cout << "[INFO] Socket Accepted connection from client" << std::endl;
         }
-        sendlist.emplace_back(send_to_client,writecon);
-        proc.emplace_back(process,con);
+        sendlist.emplace_back(send_to_client,writecon1,buf2);
         sendlist.back().detach();
+        sendlist.emplace_back(send_to_client,writecon2,buf1);
+        sendlist.back().detach();
+        proc.emplace_back(process,con);
         proc.back().detach();
 
     }
     close(reader);
-    close(writer);
+    close(writer1);
 }

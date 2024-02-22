@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <fstream>
+#include "clients.h"
 #include <ios>
 #include <iostream>
 #include <arpa/inet.h>
@@ -9,13 +10,21 @@
 #include <raylib.h>
 #include <unistd.h>
 #include <sys/socket.h>
- 
-#define PORT 8008
+#include <vector>
+#include <thread>
+#define WPORT 8089
+#define RPORT 8008
 #define WIDTH 1000
 #define HEIGHT 700
 #define PADDLEH 100
 #define PADDLEW 10
-#define PIPE "/tmp/pongdaddy"
+//#define PIPE "/tmp/pongdaddy"
+//
+//
+
+std::vector<std::thread> channel;
+float buf[2] = {0,0};
+float readbuf[2] = {-1,-1};
 class Puck{
     public:
         Color color;
@@ -44,13 +53,13 @@ class striker{
         float width,height;
         float x, y;
         int mov;
-        void broadcast(float y){
-            std::ofstream pipe(PIPE,std::ios::out | std::ios::binary);
-            if (pipe.is_open()) {
-                pipe.write((const char*)(&y), sizeof(y));
-                pipe.close();
-            }
-        }
+//        void broadcast(float y){
+//            std::ofstream pipe(PIPE,std::ios::out | std::ios::binary);
+//            if (pipe.is_open()) {
+//                pipe.write((const char*)(&y), sizeof(y));
+//                pipe.close();
+//            }
+//        }
         void draw(){
             DrawRectangle(x, y, width, height, color);
         }
@@ -63,43 +72,26 @@ class striker{
             }
             if (IsKeyDown(KEY_K)) {
                 y-=mov;
+                buf[1] = y;
+//                broadcast(y);
             }
             if (IsKeyDown(KEY_J)) {
                 y+=mov;
+                buf[1] = y;
+//                broadcast(y);
             }
         }
 };
 
-int main (int argc, char *argv[]) {
-//    int sfd = socket(AF_INET, SOCK_STREAM, 0);
-//    sockaddr_in dat;
-//    dat.sin_family = AF_INET;
-//    dat.sin_port = htons(PORT);
-//    inet_pton(AF_INET, ("127.0.0.1"), &dat.sin_addr.s_addr);
-//    if (bind(sfd, (sockaddr*)&dat, sizeof(dat)) < 0){
-//        std::cerr << "[ERROR] Socket Bind Failed" << std::endl;
-//        close(sfd);
-//        return 0;
-//    }
-//    else{
-//        std::cout << "[INFO] Socket bound" << std::endl;
-//    }
-//    if (listen(sfd, 2) < 0){
-//        std::cerr << "[ERROR] Can't listen on socket" << std::endl;
-//        close(sfd);
-//        return 0;
-//    }
-//    else{
-//        std::cout << "[INFO] Socket listening" << std::endl;
-//    }
-//    int con = accept(sfd, NULL, NULL);
-//    if (con < 0){
-//        std::cerr << "[ERROR] Socket failed to accept connection" << std::endl;
-//        return -1;
-//    }
-//    else{
-//        std::cout << "[INFO] Socket listening" << std::endl;
-//    }
+int main () {
+    SetTraceLogLevel(LOG_NONE);
+    int writer = socket(AF_INET, SOCK_STREAM, 0);
+    int reader = socket(AF_INET, SOCK_STREAM, 0);
+    CONS cons = create_sockets(&writer, &reader);
+    channel.emplace_back(send_to_server,writer,buf);
+    channel.back().detach();
+    channel.emplace_back(receive_from_server,reader,readbuf);
+    channel.back().detach();
     std::cout << "[INFO] Starting Game" << std::endl;
     Puck ball;
     striker p1;
