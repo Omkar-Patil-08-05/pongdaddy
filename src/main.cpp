@@ -125,7 +125,7 @@ int main () {
         if (CheckCollisionCircleRec(Vector2{(float)ball.x,(float)ball.y}, ball.r, Rectangle{p1.x,p1.y,p1.width,p1.height})) {
             ball.movx*=-1;
         }
-
+        p2.y = readbuf[1];
 
         p1.newpos();
         p2.draw();

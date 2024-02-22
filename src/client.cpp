@@ -26,13 +26,13 @@ void send_to_server(int cfd,float buf[2]){
         if (msg<0) {
             perror("send");
         }
-        std::cout << buf[1] << std::endl;
     }
 }
 void receive_from_server(int reader,float readbuf[2]){
     while (true) {
         int msg = recv(reader, readbuf, sizeof(float)*2, 0);
         if (msg==0) break;
+        std::cout << readbuf[1] << std::endl;
     }
 
 }
@@ -41,8 +41,8 @@ void configure_sockets(sockaddr_in *writesoc, sockaddr_in *readsoc){
     (*writesoc).sin_port = htons(WPORT);
     (*readsoc) = *writesoc;
     (*readsoc).sin_port = htons(RPORT);
-    inet_pton(AF_INET, ("192.168.1.96"),&(*writesoc).sin_addr.s_addr);
-    inet_pton(AF_INET, ("192.168.1.96"),&(*readsoc).sin_addr.s_addr);
+    inet_pton(AF_INET, ("192.168.1.7"),&(*writesoc).sin_addr.s_addr);
+    inet_pton(AF_INET, ("192.168.1.7"),&(*readsoc).sin_addr.s_addr);
 }
 
 

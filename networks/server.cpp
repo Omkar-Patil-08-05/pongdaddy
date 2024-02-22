@@ -11,16 +11,20 @@
 
 #define RPORT 8089
 #define WPORT1 8008
-#define WPORT2 8009
+#define WPORT2 8060
 float buf[2] = {0,0};
 float buf1[2] = {0,0};
 float buf2[2] = {0,0};
 std::vector<std::thread> proc;
 std::vector<std::thread> sendlist;
 void send_to_client(int sender,float buffer[2]){
+    int writecon1 = accept(sender, NULL, NULL);
+    if (writecon1<0) {
+        close(sender);
+        return;
+    }
     while(true){
-        int msg = send(sender, buffer, sizeof(float)*2, 0);
-        std::cout << msg << std::endl;
+        int msg = send(writecon1, buffer, sizeof(float)*2, 0);
     }
 }
 void process(int con){
@@ -33,7 +37,6 @@ void process(int con){
         }
         else{
             std::memcpy(buf2, buf, sizeof(buf));
-            std::cout << "[P2] " << buf2[1] << std::endl;
         }
         //   std::cout << "[SERVER] " << buf[0] << std::endl;
     }
@@ -105,26 +108,24 @@ int main(){
     else{
         std::cout << "[INFO] Socket listening" << std::endl;
     }
-    while (true) {
-        int con = accept(reader, NULL, NULL);
-        int writecon1 = accept(writer1, NULL, NULL);
-        int writecon2 = accept(writer2, NULL, NULL);
-        // 2 threads for each client 
-        if (con < 0){
-            std::cerr << "[ERROR] Socket failed to accept connection" << std::endl;
-            return -1;
-        }
-        else{
-            std::cout << "[INFO] Socket Accepted connection from client" << std::endl;
-        }
-        sendlist.emplace_back(send_to_client,writecon1,buf2);
-        sendlist.back().detach();
-        sendlist.emplace_back(send_to_client,writecon2,buf1);
-        sendlist.back().detach();
-        proc.emplace_back(process,con);
-        proc.back().detach();
-
+    while(1){
+    int con = accept(reader, NULL, NULL);
+    // 2 threads for each client 
+    if (con < 0){
+        std::cerr << "[ERROR] Socket failed to accept connection" << std::endl;
+        return -1;
+    }
+    else{
+        std::cout << "[INFO] Socket Accepted connection from client" << std::endl;
+    }
+    proc.emplace_back(process,con);
+    proc.back().detach();
+    sendlist.emplace_back(send_to_client,writer1,buf2);
+    sendlist.back().detach();
+    sendlist.emplace_back(send_to_client,writer2,buf1);
+    sendlist.back().detach();
     }
     close(reader);
     close(writer1);
+    close(writer2);
 }
