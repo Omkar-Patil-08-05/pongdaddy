@@ -2,7 +2,7 @@ CXX=g++
 CXXFLAGS=-Wall -Wextra -std=c++17
 
 RAYLIB=~/raylib
-SRCS=~/dev/pong/src/main.cpp ~/dev/pong/src/client.cpp
+SRCS=~/dev/pongdaddy/src/main.cpp ~/dev/pongdaddy/src/client.cpp
 OBJS = $(SRCS:.cpp=.o)
 LIB=-L$(RAYLIB)/src -lraylib 
 INCLUDE=-I$(RAYLIB)/src

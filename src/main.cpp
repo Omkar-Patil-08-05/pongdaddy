@@ -12,8 +12,8 @@
 #include <sys/socket.h>
 #include <vector>
 #include <thread>
-#define WPORT 8089
-#define RPORT 8008
+#define RPORT_RECEIVE 8089
+#define RPORT_SEND 8008
 #define WIDTH 1000
 #define HEIGHT 700
 #define PADDLEH 100
@@ -82,21 +82,57 @@ class striker{
             }
         }
 };
+void send_to_peer(int socket_fd, float* buffer) {
+    sockaddr_in peer_addr;
+    peer_addr.sin_family = AF_INET;
+    inet_pton(AF_INET, "192.168.1.96", &peer_addr.sin_addr);
+    peer_addr.sin_port = htons(RPORT_RECEIVE); // Port for receiving on the peer
+    int con = connect(socket_fd, (sockaddr*)&peer_addr, sizeof(peer_addr));
+    if (con<0) {
+        std::cout << "Failed to COnnect" << std::endl;
+        return;
+    }
 
+    while (true) {
+        send(socket_fd, buffer, sizeof(float) * 2, 0);
+        usleep(1000); 
+    }
+}
+
+void receive_from_peer(int socket_fd, float* buffer) {
+    sockaddr_in sender_addr;
+    socklen_t sender_len = sizeof(sender_addr);
+    sender_addr.sin_family = AF_INET;
+    sender_addr.sin_port = htons(RPORT_RECEIVE);
+    inet_pton(AF_INET, "192.168.1.7", &sender_addr.sin_addr);
+    int bin = bind(socket_fd, (sockaddr*)&sender_addr, sender_len);
+    listen(socket_fd, 1);
+    int client_fd = accept(socket_fd, (sockaddr*)&sender_addr, &sender_len);
+
+    while (true) {
+        recv(client_fd, buffer, sizeof(float) * 2, 0);
+        readbuf[1] = buffer[1];
+        usleep(9000); 
+    }
+}
 int main () {
     SetTraceLogLevel(LOG_NONE);
-    int writer = socket(AF_INET, SOCK_STREAM, 0);
-    int reader = socket(AF_INET, SOCK_STREAM, 0);
-    CONS cons = create_sockets(&writer, &reader);
-    channel.emplace_back(send_to_server,writer,buf);
+    int sender_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int receiver_socket = socket(AF_INET, SOCK_STREAM, 0);
+
+    // Sender connection
+    channel.emplace_back(send_to_peer, sender_socket, buf);
     channel.back().detach();
-    channel.emplace_back(receive_from_server,reader,readbuf);
+
+    // Receiver connection
+    channel.emplace_back(receive_from_peer, receiver_socket, readbuf);
     channel.back().detach();
     std::cout << "[INFO] Starting Game" << std::endl;
     Puck ball;
     striker p1;
     striker p2;
     InitWindow(WIDTH, HEIGHT, "Multiplayer Pong");
+    std::cout << "[INFO] Starting Game" << std::endl;
     SetTargetFPS(60);
 
     p1.mov = 10;
@@ -139,5 +175,7 @@ int main () {
         EndDrawing();
     }
     CloseWindow();
+    close(sender_socket);
+    close(receiver_socket);
     return 0;
 }
