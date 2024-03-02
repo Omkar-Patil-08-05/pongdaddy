@@ -1,2 +1,3 @@
 outfiles/
 *.out
+*.o
