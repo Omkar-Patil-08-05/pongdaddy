@@ -1,6 +1,5 @@
 #include <cstddef>
 #include <fstream>
-#include "clients.h"
 #include <ios>
 #include <iostream>
 #include <arpa/inet.h>
@@ -132,7 +131,6 @@ int main () {
     striker p1;
     striker p2;
     InitWindow(WIDTH, HEIGHT, "Multiplayer Pong");
-    std::cout << "[INFO] Starting Game" << std::endl;
     SetTargetFPS(60);
 
     p1.mov = 10;
