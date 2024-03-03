@@ -52,13 +52,13 @@ class striker{
         float width,height;
         float x, y;
         int mov;
-//        void broadcast(float y){
-//            std::ofstream pipe(PIPE,std::ios::out | std::ios::binary);
-//            if (pipe.is_open()) {
-//                pipe.write((const char*)(&y), sizeof(y));
-//                pipe.close();
-//            }
-//        }
+        //        void broadcast(float y){
+        //            std::ofstream pipe(PIPE,std::ios::out | std::ios::binary);
+        //            if (pipe.is_open()) {
+        //                pipe.write((const char*)(&y), sizeof(y));
+        //                pipe.close();
+        //            }
+        //        }
         void draw(){
             DrawRectangle(x, y, width, height, color);
         }
@@ -72,12 +72,12 @@ class striker{
             if (IsKeyDown(KEY_K)) {
                 y-=mov;
                 buf[1] = y;
-//                broadcast(y);
+                //                broadcast(y);
             }
             if (IsKeyDown(KEY_J)) {
                 y+=mov;
                 buf[1] = y;
-//                broadcast(y);
+                //                broadcast(y);
             }
         }
 };
@@ -87,14 +87,16 @@ void send_to_peer(int socket_fd, float* buffer) {
     inet_pton(AF_INET, "192.168.1.96", &peer_addr.sin_addr);
     peer_addr.sin_port = htons(RPORT_RECEIVE); // Port for receiving on the peer
     int con = connect(socket_fd, (sockaddr*)&peer_addr, sizeof(peer_addr));
-    if (con<0) {
-        std::cout << "Failed to COnnect" << std::endl;
-        return;
+    while(con<0){
+        std::cout << "Failed to Connect" << std::endl;
+        sleep(5);
+        con = connect(socket_fd, (sockaddr*)&peer_addr, sizeof(peer_addr));
     }
 
+    std::cout << "Connection Successful" << std::endl;
     while (true) {
         send(socket_fd, buffer, sizeof(float) * 2, 0);
-        usleep(1000); 
+        usleep(000); 
     }
 }
 
@@ -111,7 +113,7 @@ void receive_from_peer(int socket_fd, float* buffer) {
     while (true) {
         recv(client_fd, buffer, sizeof(float) * 2, 0);
         readbuf[1] = buffer[1];
-        usleep(9000); 
+        usleep(000); 
     }
 }
 int main () {
@@ -167,8 +169,8 @@ int main () {
         ball.newpos();
         ball.drawcric();
         Color color = {51, 51, 51, 255};
-       // DrawRectangle(10, HEIGHT/2-PADDLEH/2, PADDLEW, PADDLEH, RAYWHITE);
-       // DrawRectangle(WIDTH-15, HEIGHT/2-PADDLEH/2, PADDLEW, PADDLEH, RAYWHITE);
+        // DrawRectangle(10, HEIGHT/2-PADDLEH/2, PADDLEW, PADDLEH, RAYWHITE);
+        // DrawRectangle(WIDTH-15, HEIGHT/2-PADDLEH/2, PADDLEW, PADDLEH, RAYWHITE);
         ClearBackground(color);
         EndDrawing();
     }
