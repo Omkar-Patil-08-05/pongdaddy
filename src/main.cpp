@@ -20,9 +20,8 @@
 #define HEIGHT 700
 #define PADDLEH 100
 #define PADDLEW 10
-//#define PIPE "/tmp/pongdaddy"
-//
-//
+
+bool con_stat = 0;
 
 SSL_CTX* initialize_ssl_context(bool is_server) {
     SSL_library_init();
@@ -61,20 +60,22 @@ class Puck{
             DrawCircle(x, y, r, color);
         }
         void newpos(){
-            if (x>=WIDTH-r) {
-                movx*=-1;
-            }
             if (y>=HEIGHT-r ||y<=r ) {
                 movy*=-1;
             }
             x+=movx;
             y+=movy;
         }
+        void reset(){
+            x = WIDTH/2;
+            y = HEIGHT/2;
+        }
 };
 
 class striker{
     public:
         Color color;
+        int score;
         float width,height;
         float x, y;
         int mov;
@@ -129,6 +130,7 @@ void send_to_peer(int socket_fd,std::string peer_ip, float* buffer,SSL_CTX* ctx_
     }
 
     std::cout << "Connection Successful" << std::endl;
+    con_stat = 1;
     while (true) {
         //        send(socket_fd, buffer, sizeof(float) * 2, 0);
         SSL_write(sender_ssl, buffer, sizeof(float)*2);
@@ -194,6 +196,7 @@ int main () {
     p1.mov = 10;
     p1.y = HEIGHT/2;
     p1.x = 10;
+    p1.score = 0;
     p1.color = RAYWHITE;
     p1.width = PADDLEW;
     p1.height = PADDLEH;
@@ -201,6 +204,7 @@ int main () {
     p2.mov = 10;
     p2.y = HEIGHT/2;
     p2.x = WIDTH-20;
+    p2.score = 0;
     p2.color = RAYWHITE;
     p2.width = PADDLEW;
     p2.height = PADDLEH;
@@ -214,16 +218,29 @@ int main () {
     while (!WindowShouldClose()) {
         BeginDrawing();
 
+        DrawLine(WIDTH/2, 0, WIDTH/2, HEIGHT, RAYWHITE);
         if (CheckCollisionCircleRec(Vector2{(float)ball.x,(float)ball.y}, ball.r, Rectangle{p1.x,p1.y,p1.width,p1.height})) {
             ball.movx*=-1;
         }
         p2.y = readbuf[1];
 
+        if (ball.x+ball.r<=0) {
+            p2.score++;
+            ball.reset();
+        }
+        if (ball.x+ball.r>=WIDTH) {
+            p1.score++;
+            ball.reset();
+        }
         p1.newpos();
         p2.draw();
         p1.draw();
-        ball.newpos();
-        ball.drawcric();
+        if (con_stat) {
+            ball.newpos();
+            ball.drawcric();
+            DrawText(TextFormat("%i",p1.score), WIDTH/4-20, 20, 80, RAYWHITE);
+            DrawText(TextFormat("%i",p2.score),3* WIDTH/4-20, 20, 80, RAYWHITE);
+        }
         Color color = {51, 51, 51, 255};
         // DrawRectangle(10, HEIGHT/2-PADDLEH/2, PADDLEW, PADDLEH, RAYWHITE);
         // DrawRectangle(WIDTH-15, HEIGHT/2-PADDLEH/2, PADDLEW, PADDLEH, RAYWHITE);
