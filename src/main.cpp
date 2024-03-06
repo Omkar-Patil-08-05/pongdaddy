@@ -12,6 +12,8 @@
 #include <sys/socket.h>
 #include <vector>
 #include <thread>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
 #define RPORT_RECEIVE 8089
 #define RPORT_SEND 8008
 #define WIDTH 1000
@@ -21,6 +23,29 @@
 //#define PIPE "/tmp/pongdaddy"
 //
 //
+
+SSL_CTX* initialize_ssl_context(bool is_server) {
+    SSL_library_init();
+    SSL_load_error_strings();
+    OpenSSL_add_all_algorithms();
+
+    SSL_CTX* ctx = SSL_CTX_new(is_server ? TLS_server_method() : TLS_client_method());
+    if (!ctx) {
+        ERR_print_errors_fp(stderr);
+        exit(EXIT_FAILURE);
+    }
+
+    // Load server certificate and private key
+    if (is_server) {
+        if (SSL_CTX_use_certificate_file(ctx, "/home/vorrtt3x/dev/pongdaddy/certificate.pem", SSL_FILETYPE_PEM) <= 0 ||
+            SSL_CTX_use_PrivateKey_file(ctx, "/home/vorrtt3x/dev/pongdaddy/key.pem", SSL_FILETYPE_PEM) <= 0) {
+            ERR_print_errors_fp(stderr);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return ctx;
+}
 
 std::vector<std::thread> channel;
 float buf[2] = {0,0};
@@ -119,6 +144,8 @@ void receive_from_peer(int socket_fd, float* buffer) {
 }
 int main () {
     SetTraceLogLevel(LOG_NONE);
+    SSL_CTX* ctx_sender = initialize_ssl_context(false);
+    SSL_CTX* ctx_receiver = initialize_ssl_context(true);
     int sender_socket = socket(AF_INET, SOCK_STREAM, 0);
     int receiver_socket = socket(AF_INET, SOCK_STREAM, 0);
 

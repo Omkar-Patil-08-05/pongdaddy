@@ -4,7 +4,7 @@ CXXFLAGS=-Wall -Wextra -std=c++17
 RAYLIB=~/raylib
 SRCS=~/dev/pongdaddy/src/main.cpp
 OBJS = $(SRCS:.cpp=.o)
-LIB=-L$(RAYLIB)/src -lraylib 
+LIB=-L$(RAYLIB)/src -lraylib -lssl -lcrypto
 INCLUDE=-I$(RAYLIB)/src
 
 ORIGIN=src/main.cpp
