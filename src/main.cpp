@@ -36,8 +36,8 @@ SSL_CTX* initialize_ssl_context(bool is_server) {
 
     // Load server certificate and private key
     if (is_server) {
-        if (SSL_CTX_use_certificate_file(ctx, "/home/vorrtt3x/dev/pongdaddy/certificate.pem", SSL_FILETYPE_PEM) <= 0 ||
-                SSL_CTX_use_PrivateKey_file(ctx, "/home/vorrtt3x/dev/pongdaddy/key.pem", SSL_FILETYPE_PEM) <= 0) {
+        if (SSL_CTX_use_certificate_file(ctx, "/home/vorrtt3x/cloned/pongdaddy/certificate.pem", SSL_FILETYPE_PEM) <= 0 ||
+                SSL_CTX_use_PrivateKey_file(ctx, "/home/vorrtt3x/cloned/pongdaddy/key.pem", SSL_FILETYPE_PEM) <= 0) {
             ERR_print_errors_fp(stderr);
             exit(EXIT_FAILURE);
         }

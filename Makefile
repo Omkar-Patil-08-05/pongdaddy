@@ -1,18 +1,29 @@
-CXX=g++
-CXXFLAGS=-Wall -Wextra -std=c++17
+CXX := g++
+CXXFLAGS := -Wall -Wextra -std=c++17
 
-RAYLIB=~/raylib
-SRCS=~/dev/pongdaddy/src/main.cpp
-OBJS = $(SRCS:.cpp=.o)
-LIB=-L$(RAYLIB)/src -lraylib -lssl -lcrypto
-INCLUDE=-I$(RAYLIB)/src
+RAYLIB_PATH ?= $(HOME)/raylib
 
-ORIGIN=src/main.cpp
-TARGET=outfiles/pong
+SRC_DIR := src
+OUT_DIR := outfiles
+TARGET := $(OUT_DIR)/pong
+
+SRCS := $(wildcard $(SRC_DIR)/*.cpp)
+OBJS := $(SRCS:.cpp=.o)
+
+INCLUDE := -I$(RAYLIB_PATH)/src
+LIB := -L$(RAYLIB_PATH)/src -lraylib -lssl -lcrypto
+
+$(shell mkdir -p $(OUT_DIR))
+
+.PHONY: all clean
+
+all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CXX) $(LDFLAGS) $(INCLUDE) $^ -o $@ $(LIB)
 
 %.o: %.cpp
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $@
 
+clean:
+	rm -f $(OBJS) $(TARGET)
